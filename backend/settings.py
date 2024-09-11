@@ -120,7 +120,7 @@ USE_I18N = True
 USE_TZ = True
 
 CORS_ALLOWED_ORIGINS = [
-    #'https://wikitube-backend.vercel.app',
+    "https://wikitubeio-backend-nsq354vwx-revathi-ks-projects.vercel.app",
     "https://wikitubeio.vercel.app",
     'http://localhost:3000',
     'http://127.0.0.1:3000'

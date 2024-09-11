@@ -56,7 +56,7 @@ def verify_email(request, token):
     user.is_active = True
     user.save()
     token_obj.delete()  # Optionally delete the token once used
-    return redirect('https://www.wikitube.io/login')  # Redirect to a
+    return redirect('https://wikitubeio.vercel.app/')  # Redirect to a
 
 @api_view(['GET'])
 def currentUser(request):
