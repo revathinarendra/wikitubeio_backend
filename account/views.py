@@ -58,6 +58,34 @@ def verify_email(request, token):
     token_obj.delete()  # Optionally delete the token once used
     return redirect('https://wikitubeio.vercel.app/')  # Redirect to a
 
+from django.contrib.auth import authenticate
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import LoginSerializer
+from django.contrib.auth.models import User
+
+@api_view(['POST'])
+def login_view(request):
+    data = request.data
+    serializer = LoginSerializer(data=data)
+
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+
+        # Authenticate the user
+        user = authenticate(request, username=email, password=password)
+        
+        if user is not None:
+            # Successful login
+            return Response({'message': 'Login successful', 'user': {'email': user.email, 'first_name': user.first_name, 'last_name': user.last_name}}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid email or password'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['GET'])
 def currentUser(request):
     user = UserSerializer(request.user)

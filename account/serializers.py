@@ -81,3 +81,18 @@ class PasswordResetSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
         return user
+from rest_framework import serializers
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        if email and password:
+            if not User.objects.filter(email=email).exists():
+                raise serializers.ValidationError('No user found with this email address.')
+
+        return data
