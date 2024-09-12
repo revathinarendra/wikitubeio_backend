@@ -73,13 +73,22 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # DATABASES = {
 #     "default": dj_database_url.config(default=os.environ.get('POSTGRES_URL'))
 # }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("SUPBASE_DB_NAME"),
+        "USER": os.environ.get("SUPBASE_DB_USER"),
+        "PASSWORD": os.environ.get("SUPBASE_DB_PASSWORD"),
+        "HOST": os.environ.get("SUPBASE_DB_HOST"),
+        "PORT": os.environ.get("SUPBASE_DB_PORT"),
     }
 }
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
