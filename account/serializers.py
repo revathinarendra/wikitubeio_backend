@@ -81,7 +81,7 @@ class PasswordResetSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
         return user
-from rest_framework import serializers
+
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
