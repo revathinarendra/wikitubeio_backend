@@ -89,7 +89,7 @@ def currentUser(request):
 # Update User Profile (Protected Route)
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def update_user(request):
+def updateUser(request):
     user = request.user
     data = request.data
 
