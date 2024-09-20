@@ -149,12 +149,3 @@ def password_reset_confirm(request, uidb64, token):
         return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Token Refresh View
-@api_view(['POST'])
-def refresh_token_view(request):
-    refresh = request.data.get('refresh')
-    try:
-        token = RefreshToken(refresh)
-        return Response({'access': str(token.access_token)}, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
