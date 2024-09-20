@@ -82,7 +82,7 @@ def login_view(request):
 # Get Current Logged-in User (Protected Route)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def current_user(request):
+def currentUser(request):
     user = UserSerializer(request.user)
     return Response(user.data)
 
