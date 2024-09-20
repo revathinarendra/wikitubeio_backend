@@ -1,24 +1,27 @@
-from django.core.mail import send_mail
-from django.conf import settings
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework.decorators import api_view
+from django.contrib.auth.hashers import make_password
+from django.core.mail import send_mail
+from django.conf import settings
+
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth.models import User
-from .serializers import SignUpSerializer, UserSerializer, PasswordResetRequestSerializer, PasswordResetSerializer
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from .models import EmailVerificationToken
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth import authenticate
-from .serializers import LoginSerializer
+from .serializers import SignUpSerializer, UserSerializer, LoginSerializer, PasswordResetRequestSerializer, PasswordResetSerializer
 
+User = get_user_model()
 
-
-
+# Registration View
 @api_view(['POST'])
 def register(request):
     data = request.data
@@ -29,7 +32,6 @@ def register(request):
             user = user_serializer.save()
             token = EmailVerificationToken.objects.create(user=user)
             current_site = get_current_site(request).domain
-            
             verification_link = f"http://{current_site}{reverse('verify-email', kwargs={'token': token.token})}"
             send_mail(
                 'Verify your email address',
@@ -44,68 +46,55 @@ def register(request):
     else:
         return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-
+# Email Verification View
 @api_view(['GET'])
 def verify_email(request, token):
     token_obj = get_object_or_404(EmailVerificationToken, token=token)
-
     if token_obj.is_expired():
-        # Optionally regenerate a new token and send another email
-        token_obj.regenerate_token()
-        current_site = get_current_site(request).domain
-        verification_link = f"http://{current_site}{reverse('verify-email', kwargs={'token': token_obj.token})}"
-        
-        send_mail(
-            'Verify your email address',
-            f'Your previous verification token expired. Please click the link to verify your email: {verification_link}',
-            settings.DEFAULT_FROM_EMAIL,
-            [token_obj.user.email],
-            fail_silently=False,
-        )
-        return Response({'error': 'Token has expired, a new verification email has been sent.'}, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response({'error': 'Token has expired'}, status=status.HTTP_400_BAD_REQUEST)
     user = token_obj.user
     user.is_active = True
     user.save()
-    token_obj.delete()  # Optionally delete the token once used
-    return redirect('https://wikitubeio.vercel.app/')  # Redirect to frontend
+    token_obj.delete()
+    return redirect(settings.FRONTEND_URL)  # Redirect to frontend after verification
 
 
 @api_view(['POST'])
 def login_view(request):
-    data = request.data
-    serializer = LoginSerializer(data=data)
-
+    serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
         email = serializer.validated_data['email']
         password = serializer.validated_data['password']
-
-        # Authenticate the user
         user = authenticate(request, username=email, password=password)
-        
+
         if user is not None:
-            # Successful login
-            return Response({'message': 'Login successful', 'user': {'email': user.email, 'first_name': user.first_name, 'last_name': user.last_name}}, status=status.HTTP_200_OK)
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': {'email': user.email, 'first_name': user.first_name, 'last_name': user.last_name}
+            }, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid email or password'}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# Get Current Logged-in User (Protected Route)
 @api_view(['GET'])
-def currentUser(request):
+@permission_classes([IsAuthenticated])
+def current_user(request):
     user = UserSerializer(request.user)
     return Response(user.data)
 
+# Update User Profile (Protected Route)
 @api_view(['PUT'])
-def updateUser(request):
+@permission_classes([IsAuthenticated])
+def update_user(request):
     user = request.user
     data = request.data
 
     user.first_name = data.get('first_name', user.first_name)
-    user.last_name = data.get('last_name', user.last_name )
+    user.last_name = data.get('last_name', user.last_name)
     user.email = data.get('email', user.email)
 
     if data.get('password'):
@@ -118,10 +107,10 @@ def updateUser(request):
     user_profile.gender = data.get('gender', user_profile.gender)
     user_profile.save()
 
-    serializer = UserSerializer(user, many=False)
+    serializer = UserSerializer(user)
     return Response(serializer.data)
 
-
+# Password Reset Request View
 @api_view(['POST'])
 def password_reset_request(request):
     serializer = PasswordResetRequestSerializer(data=request.data)
@@ -134,9 +123,7 @@ def password_reset_request(request):
         
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        #frontend_url = settings.FRONTEND_URL
         reset_link = f"{settings.FRONTEND_URL}/resetpassword?uidb64={uidb64}&token={token}"
-
         
         send_mail(
             'Password Reset Request',
@@ -145,10 +132,10 @@ def password_reset_request(request):
             [email],
             fail_silently=False,
         )
-        
         return Response({'message': 'Password reset email sent.'}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# Password Reset Confirm View
 @api_view(['POST'])
 def password_reset_confirm(request, uidb64, token):
     data = {
@@ -159,6 +146,15 @@ def password_reset_confirm(request, uidb64, token):
     serializer = PasswordResetSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
-        return Response({'message':'Password reset successfull'}) 
-        #return redirect(f'{settings.FRONTEND_URL}reset-password-success')
+        return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Token Refresh View
+@api_view(['POST'])
+def refresh_token_view(request):
+    refresh = request.data.get('refresh')
+    try:
+        token = RefreshToken(refresh)
+        return Response({'access': str(token.access_token)}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

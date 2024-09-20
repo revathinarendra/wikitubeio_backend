@@ -47,19 +47,30 @@ def register(request):
 
 
 
-
 @api_view(['GET'])
 def verify_email(request, token):
     token_obj = get_object_or_404(EmailVerificationToken, token=token)
 
     if token_obj.is_expired():
-        return Response({'error': 'Token has expired'}, status=status.HTTP_400_BAD_REQUEST)
+        # Optionally regenerate a new token and send another email
+        token_obj.regenerate_token()
+        current_site = get_current_site(request).domain
+        verification_link = f"http://{current_site}{reverse('verify-email', kwargs={'token': token_obj.token})}"
+        
+        send_mail(
+            'Verify your email address',
+            f'Your previous verification token expired. Please click the link to verify your email: {verification_link}',
+            settings.DEFAULT_FROM_EMAIL,
+            [token_obj.user.email],
+            fail_silently=False,
+        )
+        return Response({'error': 'Token has expired, a new verification email has been sent.'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = token_obj.user
     user.is_active = True
     user.save()
     token_obj.delete()  # Optionally delete the token once used
-    return redirect('https://wikitubeio.vercel.app/')  # Redirect to a
+    return redirect('https://wikitubeio.vercel.app/')  # Redirect to frontend
 
 
 @api_view(['POST'])
