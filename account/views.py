@@ -68,16 +68,24 @@ def login_view(request):
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user': {'email': user.email, 'first_name': user.first_name, 'last_name': user.last_name}
-            }, status=status.HTTP_200_OK)
+            if user.is_active:  # Check if the user's account is active
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    'user': {
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name
+                    }
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Please verify your email before logging in.'}, status=status.HTTP_403_FORBIDDEN)
         else:
             return Response({'error': 'Invalid email or password'}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Get Current Logged-in User (Protected Route)
 @api_view(['GET'])
