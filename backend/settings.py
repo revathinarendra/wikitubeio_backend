@@ -32,6 +32,7 @@ THIRD_PARTY_APPS = [
 
 OUR_APPS = [
     'account',
+    'directory',
     
 ]
 
