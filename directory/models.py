@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
+from urllib.parse import urlparse
 
 class Course(models.Model):
     course_id = models.AutoField(primary_key=True)
@@ -16,19 +17,51 @@ class Course(models.Model):
         return self.course_name
 
 
+
 class Article(models.Model):
-    course_name = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course_name = models.ForeignKey('Course', on_delete=models.CASCADE)
     article_name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField()
-    article_video_thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
     article_video_url = models.URLField(blank=True, null=True)
-    # Use a different related_name for clarity
+    article_video_thumbnail = models.URLField(blank=True, null=True)
     hyperlinks = models.ManyToManyField('Hyperlink', related_name='articles', blank=True)
+    contents = models.ManyToManyField('Content', related_name='articles', blank=True)
+    quiz = models.ManyToManyField('Quiz', related_name='article_quizzes', blank=True)
+
+    def get_youtube_video_id(self, url):
+        """
+        Extracts YouTube video ID from a URL.
+        Supports regular, short, and embed YouTube URLs.
+        """
+        parsed_url = urlparse(url)
+        if 'youtube.com' in parsed_url.netloc and 'v=' in parsed_url.query:
+            return parsed_url.query.split('v=')[1].split('&')[0]
+        elif 'youtu.be' in parsed_url.netloc:
+            return parsed_url.path.split('/')[1]
+        elif 'youtube.com' in parsed_url.netloc and '/embed/' in parsed_url.path:
+            return parsed_url.path.split('/embed/')[1].split('?')[0]
+        return None
+
+    def get_youtube_thumbnail_url(self, video_id):
+        """
+        Returns the YouTube thumbnail URL for a given video ID.
+        """
+        return f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
 
     def save(self, *args, **kwargs):
+        # Generate slug if it's not provided
         if not self.slug:
             self.slug = slugify(self.article_name)
+
+        # If there's a YouTube video URL, generate the thumbnail
+        if self.article_video_url:
+            video_id = self.get_youtube_video_id(self.article_video_url)
+            if video_id:
+                self.article_video_thumbnail = self.get_youtube_thumbnail_url(video_id)
+            else:
+                print("Error: Could not extract YouTube video ID from the URL.")
+
         super(Article, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -52,8 +85,10 @@ class Hyperlink(models.Model):
 
 class Content(models.Model):
     content_id = models.AutoField(primary_key=True)
-    content_name = models.CharField(max_length=255, unique=True)
+    article = models.ForeignKey(Article, related_name='content', on_delete=models.CASCADE) 
 
+    content_name = models.CharField(max_length=255, unique=True)
+    
     def __str__(self):
         return self.content_name
 
@@ -71,11 +106,11 @@ class VideoPlayer(models.Model):
 
 
 class Quiz(models.Model):
-    article_name = models.ForeignKey(Article, related_name='quizzes', on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, related_name='quizzes', on_delete=models.CASCADE)
     question = models.TextField()
     options = models.TextField(help_text="Separate each option with a comma")
-    opt_values = models.TextField(help_text="Enter the option values corresponding to each option, separated by commas")
-    correct_options = models.TextField(help_text="Enter the correct options separated by commas")
+    opt_values = models.TextField(help_text="Enter the option values corresponding to each option, separated by semicolon")
+    correct_options = models.TextField(help_text="Enter the correct options separated by semicolon")
 
     def __str__(self):
         return f"Quiz for {self.article_name}"

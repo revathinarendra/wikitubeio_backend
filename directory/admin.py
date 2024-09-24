@@ -34,9 +34,9 @@ class VideoPlayerAdmin(admin.ModelAdmin):
 
 # Customizing admin for the Quiz model
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ('article_name', 'question')
-    search_fields = ('article_name__article_name', 'question')  # Search by article name and question
-    list_filter = ('article_name',)
+    list_display = ('article', 'question')
+    search_fields = ('article', 'question')  # Search by article name and question
+    list_filter = ('article',)
 
 # Customizing admin for the UserPerformance model
 class UserPerformanceAdmin(admin.ModelAdmin):
