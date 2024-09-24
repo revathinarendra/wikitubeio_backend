@@ -23,6 +23,8 @@ class Article(models.Model):
     description = models.TextField()
     article_video_thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
     article_video_url = models.URLField(blank=True, null=True)
+    # Use a different related_name for clarity
+    hyperlinks = models.ManyToManyField('Hyperlink', related_name='articles', blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -31,6 +33,21 @@ class Article(models.Model):
 
     def __str__(self):
         return self.article_name
+
+
+class Hyperlink(models.Model):
+    article_name = models.ForeignKey(Article, related_name='hyperlinks_set', blank=True, null=True,on_delete=models.CASCADE)
+    hyper_link_word = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=200, unique=True)
+    hyper_link_word_url = models.URLField()
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.hyper_link_word)
+        super(Hyperlink, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.hyper_link_word
 
 
 class Content(models.Model):
@@ -61,7 +78,7 @@ class Quiz(models.Model):
     correct_options = models.TextField(help_text="Enter the correct options separated by commas")
 
     def __str__(self):
-        return f"Quiz for {self.article.article_name}"
+        return f"Quiz for {self.article_name}"
 
 
 class UserPerformance(models.Model):
