@@ -7,6 +7,7 @@ class Course(models.Model):
     course_id = models.AutoField(primary_key=True)
     course_name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True)
+    total_videos = models.PositiveIntegerField(null=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -95,14 +96,14 @@ class Content(models.Model):
 
 class VideoPlayer(models.Model):
     video_played_id = models.AutoField(primary_key=True)
-    article_video_url = models.ForeignKey(Article, related_name='videos', on_delete=models.CASCADE)
-    article_video_thumbnail = models.ForeignKey(Article, related_name='thumbnails', on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, related_name='videos', on_delete=models.CASCADE)
     video_title = models.CharField(max_length=255)
     video_description = models.TextField()
     channel_name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.video_title
+
 
 
 class Quiz(models.Model):
@@ -116,9 +117,29 @@ class Quiz(models.Model):
         return f"Quiz for {self.article_name}"
 
 
+# class UserPerformance(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     course = models.ForeignKey(Course,related_name='course',on_delete=models.CASCADE)
+#     watched_videos = models.ManyToManyField(VideoPlayer)
+
+#     def __str__(self):
+#         return f"Performance of {self.user.username}"
+
+
+
 class UserPerformance(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name='course',null=True, on_delete=models.CASCADE)
     watched_videos = models.ManyToManyField(VideoPlayer)
+
+    @property
+    def progress(self):
+        total_videos = self.course.total_videos
+        watched_videos_count = self.watched_videos.count()
+        if total_videos > 0:
+            return (watched_videos_count / total_videos) * 100
+        return 0  # If no videos in the course
 
     def __str__(self):
         return f"Performance of {self.user.username}"
+

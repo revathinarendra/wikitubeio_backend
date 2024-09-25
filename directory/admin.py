@@ -28,7 +28,7 @@ class ArticleAdmin(admin.ModelAdmin):
 
 # Customizing admin for the VideoPlayer model
 class VideoPlayerAdmin(admin.ModelAdmin):
-    list_display = ('video_title', 'channel_name', 'article_video_url', 'article_video_thumbnail')
+    list_display = ('video_title', 'channel_name', 'article')
     search_fields = ('video_title', 'channel_name')
     list_filter = ('channel_name',)
 

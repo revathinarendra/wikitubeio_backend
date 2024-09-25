@@ -1,11 +1,43 @@
 from rest_framework import generics
 from .models import Article, Course, Quiz
 from .serializers import ArticleSerializer, CourseSerializer, QuizSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import Course
+from .serializers import CourseSerializer
 
-# API View to get the list of courses
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from .models import Course
+from .serializers import CourseSerializer
+from django.shortcuts import get_object_or_404
+
+class CourseDetailView(APIView):
+    permission_classes = [IsAuthenticated]  # Require user authentication
+
+    def get(self, request, course_id):
+        # Ensure user is authenticated
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Fetch the course by ID
+        course = get_object_or_404(Course, pk=course_id)
+        user = request.user  # The authenticated user
+
+        # Pass the user into the serializer context
+        serializer = CourseSerializer(course, context={'user': user})
+        return Response(serializer.data)
+
+
+# # API View to get the list of courses
 class CourseListView(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+
+
+
 # API View to get the list of articles
 class ArticleListView(generics.ListAPIView):
     queryset = Article.objects.all()
