@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Article, Content, Course, Hyperlink, Quiz
+from .models import Article, Content, Course, Hyperlink, Quiz, VideoPlayer
 
 # class CourseSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -19,22 +19,6 @@ class UserPerformanceSerializer(serializers.ModelSerializer):
     def get_progress(self, obj):
         return obj.progress
 
-
-# class CourseSerializer(serializers.ModelSerializer):
-#     user_performance = serializers.SerializerMethodField()  # Custom field for nested performance
-
-#     class Meta:
-#         model = Course
-#         fields = ['course_id', 'course_name', 'slug', 'total_videos', 'user_performance']
-
-#     def get_user_performance(self, obj):
-#         # Fetch user performance for the course
-#         user = self.context.get('user')  # Expecting user in context
-#         if user:
-#             performance = UserPerformance.objects.filter(user=user, course=obj).first()
-#             if performance:
-#                 return UserPerformanceSerializer(performance).data
-#         return None  # No performance found for the user
 
 class CourseSerializer(serializers.ModelSerializer):
     user_performance = serializers.SerializerMethodField()  # Custom field for performance
@@ -82,10 +66,23 @@ class ContentSerializer(serializers.ModelSerializer):
         model = Content
         fields = ['content_id','content_name']
 
+
+class VideoPlayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VideoPlayer
+        fields = [
+            'video_played_id',
+            'video_title',
+            'video_description',
+            'channel_name'
+        ]
+
+
 class ArticleSerializer(serializers.ModelSerializer):
     hyperlinks = HyperlinkSerializer(many=True, read_only=True)
     quizzes = QuizSerializer(many=True, read_only=True)
     content = ContentSerializer(many=True, read_only=True)  # Add ContentSerializer here
+    videos = VideoPlayerSerializer(many=True, read_only=True)
 
     class Meta:
         model = Article
@@ -99,6 +96,7 @@ class ArticleSerializer(serializers.ModelSerializer):
             'article_video_url', 
             'hyperlinks', 
             'quizzes', 
-            'content' 
+            'content' ,
+            'videos'
         ]
         

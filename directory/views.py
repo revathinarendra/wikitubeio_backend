@@ -3,15 +3,8 @@ from .models import Article, Course, Quiz
 from .serializers import ArticleSerializer, CourseSerializer, QuizSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Course
-from .serializers import CourseSerializer
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from .models import Course
-from .serializers import CourseSerializer
 from django.shortcuts import get_object_or_404
 
 class CourseDetailView(APIView):
@@ -36,12 +29,15 @@ class CourseListView(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
+class ArticleListView(generics.ListAPIView):
+    queryset = Article.objects.prefetch_related('hyperlinks', 'contents', 'quiz','videos')
+    serializer_class = ArticleSerializer
 
 
 # API View to get the list of articles
-class ArticleListView(generics.ListAPIView):
-    queryset = Article.objects.all()
-    serializer_class = ArticleSerializer
+# class ArticleListView(generics.ListAPIView):
+#     queryset = Article.objects.all()
+#     serializer_class = ArticleSerializer
 # API View to get details of a specific article based on the slug
 class ArticleDetailView(generics.RetrieveAPIView):
     queryset = Article.objects.all()
