@@ -70,7 +70,7 @@ class Article(models.Model):
 
 
 class Hyperlink(models.Model):
-    article_name = models.ForeignKey(Article, related_name='hyperlinks_set', blank=True, null=True,on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, related_name='hyperlinks_set', blank=True, null=True,on_delete=models.CASCADE)
     hyper_link_word = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     hyper_link_word_url = models.URLField()
@@ -114,7 +114,7 @@ class Quiz(models.Model):
     correct_options = models.TextField(help_text="Enter the correct options separated by semicolon")
 
     def __str__(self):
-        return f"Quiz for {self.article_name}"
+        return f"Quiz for {self.article.article_name}"
 
 
 # class UserPerformance(models.Model):
