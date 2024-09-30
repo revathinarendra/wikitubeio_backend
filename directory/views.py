@@ -30,7 +30,7 @@ class CourseListView(generics.ListAPIView):
     serializer_class = CourseSerializer
 
 class ArticleListView(generics.ListAPIView):
-    queryset = Article.objects.prefetch_related('hyperlinks', 'contents', 'quiz','videos')
+    queryset = Article.objects.prefetch_related('hyperlinks', 'contents', 'quiz')
     serializer_class = ArticleSerializer
 
 
