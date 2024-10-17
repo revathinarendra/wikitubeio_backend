@@ -3,3 +3,4 @@ backend/.env
 db.sqlite3
 env1
 directory/models1.py
+downloads

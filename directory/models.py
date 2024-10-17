@@ -10,8 +10,6 @@ import requests
 import time
 import yt_dlp
 
-
-
 class Course(models.Model):
     course_id = models.AutoField(primary_key=True)
     course_name = models.CharField(max_length=100, unique=True)
