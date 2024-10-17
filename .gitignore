@@ -1,4 +1,5 @@
 django-backend
 backend/.env
 db.sqlite3
-env
+env1
+directory/models1.py

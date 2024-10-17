@@ -1,12 +1,13 @@
 from rest_framework import serializers
-from .models import Article, Content, Course, Hyperlink, Quiz, VideoPlayer
+from .models import Article, Content, Course, Hyperlink, Quiz, VideoPlayer,UserPerformance
+from youtube_transcript_api import YouTubeTranscriptApi
+
 
 # class CourseSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Course
 #         fields = ['course_id', 'course_name', 'slug']
-from rest_framework import serializers
-from .models import Course, UserPerformance
+ 
 
 
 class UserPerformanceSerializer(serializers.ModelSerializer):
@@ -65,7 +66,7 @@ class ContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Content
         fields = ['content_id','content_name']
-from youtube_transcript_api import YouTubeTranscriptApi # type: ignore
+
 import re
 
 
@@ -81,7 +82,7 @@ class ArticleSerializer(serializers.ModelSerializer):
     quizzes = QuizSerializer(many=True, read_only=True)
     content = ContentSerializer(many=True, read_only=True)
     videos = VideoPlayerSerializer(many=True, read_only=True)
-    subtitles = serializers.SerializerMethodField()  # Add a field for subtitles
+    #subtitles = serializers.SerializerMethodField()  # Add a field for subtitles
 
     class Meta:
         model = Article
@@ -93,11 +94,12 @@ class ArticleSerializer(serializers.ModelSerializer):
             'description', 
             'article_video_thumbnail', 
             'article_video_url', 
+            'transcript',
             'hyperlinks', 
             'quizzes', 
             'content',
             'videos',
-            'subtitles', 
+            
         ]
 
     def get_subtitles(self, obj):
