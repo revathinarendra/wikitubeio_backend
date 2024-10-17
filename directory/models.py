@@ -24,7 +24,7 @@ class Course(models.Model):
 AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'ap-north-1')
 print(AWS_S3_REGION_NAME)
 
-from .utils.transcription_utils import (
+from directory.utils.transcription_utils import (
     get_youtube_video_id,
     get_youtube_thumbnail_url,
     download_youtube_audio,
