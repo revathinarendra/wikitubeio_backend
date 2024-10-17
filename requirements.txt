@@ -18,12 +18,10 @@ djangorestframework==3.15.1
 djangorestframework-simplejwt==5.3.1
 gunicorn==22.0.0
 idna==3.10
-imageio==2.36.0
-imageio-ffmpeg==0.5.1
 isort==5.13.2
 jmespath==1.0.1
 mccabe==0.7.0
-moviepy==1.0.3
+
 mutagen==1.47.0
 numpy==1.26.4
 packaging==24.0
