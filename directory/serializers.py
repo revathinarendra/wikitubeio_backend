@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Article, Content, Course, Hyperlink, Quiz, VideoPlayer,UserPerformance
-from youtube_transcript_api import YouTubeTranscriptApi
+
 
 
 # class CourseSerializer(serializers.ModelSerializer):
@@ -102,21 +102,21 @@ class ArticleSerializer(serializers.ModelSerializer):
             
         ]
 
-    def get_subtitles(self, obj):
-        video_url = obj.article_video_url
-        video_id = self.extract_video_id(video_url)
+    # def get_subtitles(self, obj):
+    #     video_url = obj.article_video_url
+    #     video_id = self.extract_video_id(video_url)
 
-        if not video_id:
-            return None
+    #     if not video_id:
+    #         return None
 
-        try:
-            # Fetch subtitles using youtube_transcript_api
-            transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
-            return transcript
-        except Exception as e:
-            # If subtitles are not available or any error occurs
-            print(f'Error fetching subtitles: {e}')
-            return None
+    #     try:
+    #         # Fetch subtitles using youtube_transcript_api
+    #         transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
+    #         return transcript
+    #     except Exception as e:
+    #         # If subtitles are not available or any error occurs
+    #         print(f'Error fetching subtitles: {e}')
+    #         return None
 
     def extract_video_id(self, url):
         # Regular expression to extract YouTube video ID
